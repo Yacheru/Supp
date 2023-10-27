@@ -1,13 +1,17 @@
 import discord
 import openai
 import datetime
+import json
 from discord.ext import commands
 from discord import app_commands
 
 from data.postgresql import pcursor
 from bot import bot
 
-openai.api_key = "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"
+with open('config.json', 'r', encoding='utf-8') as f:
+    cfg = json.load(f)
+
+openai.api_key = cfg['BOT']['GPTTOKEN']
 
 class SomeCommandsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -42,6 +46,29 @@ class SomeCommandsCog(commands.Cog):
             em.set_author(name=f"{inter.user.name}", icon_url = f"{inter.user.avatar.url if inter.user.avatar else inter.user.default_avatar}")
             em.set_image(url=f"{response['data'][0]['url']}")
             await inter.followup.send(embed=em)
+
+        @app_commands.command(name="usermsgclear", description="Убрать сообщения пользователя из дб")
+        @app_commands.describe(user="Выберете пользователя", count="Количество удаляемых сообщений")
+        async def clear(inter: discord.Interaction, user: discord.Member, count: int):
+            try:
+                pcursor.execute("SELECT userID, messages_count FROM messages_activity WHERE userID = %s", (user.id,))
+                user_data = pcursor.fetchone()
+
+                if user_data:
+                    user_id, current_count = user_data
+
+                    if count > current_count:
+                        await inter.response.send_message("Указанное количество сообщений для удаления больше, чем имеющееся количество.", ephemeral=True)
+                    else:
+                        new_count = current_count - count
+
+                        pcursor.execute("UPDATE messages_activity SET messages_count = %s WHERE userID = %s", (new_count, user_id))
+
+                        await inter.response.send_message(f"У пользователя {user.mention} было удалено {count} сообщений. Теперь у него {new_count} сообщений.", ephemeral=True)
+                else:
+                    await inter.response.send_message("Такого пользователя нет", ephemeral=True)
+            except Exception as e:
+                print(f"[COMMAND] [ERROR] WITH CODE {e}")
     except Exception as e:
         print(f"[{datetime.datetime.now().strftime('%H:%M:%S, %d/%m')}] [MODER COMMANDS] [ERROR] WITH CODE {e}")
 

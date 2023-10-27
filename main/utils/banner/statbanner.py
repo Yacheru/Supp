@@ -45,23 +45,25 @@ async def update_most_active_user_data():
             pcursor.execute("UPDATE messages_activity SET messages_count = 0")
 
             if most_active:
-                nickname = most_active.display_name[:10] + "..." if len(most_active.display_name) > 10 else most_active.display_name
+                nickname = most_active.display_name[:7] + "..." if len(most_active.display_name) > 7 else most_active.display_name
                 avatar_url = most_active.avatar.url if most_active.avatar else most_active.default_avatar.url
+
+                image(url = avatar_url)
 
                 if result is None:
                     pcursor.execute("INSERT INTO most_msg_activity_user (nickname, messages_count) VALUES (%s, %s)", (nickname, user_data[1]))
                 else:
                     pcursor.execute("UPDATE most_msg_activity_user SET nickname = %s, messages_count = %s WHERE nickname = %s", (nickname, user_data[1], result[0]))
 
-                print("[UPDATE ACTIVE USER] [TASK] [INFO] MOST ACTIVE USER INSERTED AT", datetime.datetime.now().strftime('%H:%M %d/%m/%Y'))
+                print(f"[{ datetime.datetime.now().strftime('%H:%M %d/%m/%Y')}] [UPDATE ACTIVE USER] [TASK] [INFO] MOST ACTIVE USER INSERTED AT")
             else:
                 pcursor.execute("UPDATE most_msg_activity_user SET nickname = %s, messages_count = %s WHERE nickname = %s", ("Неизвестно", 0, result[0] if result else None))
         else:
             pcursor.execute("UPDATE most_msg_activity_user SET nickname = %s, messages_count = %s WHERE nickname = %s", ("Неизвестно", 0, result[0] if result else None))
 
-        print("[UPDATE ACTIVE USER] [TASK] [INFO] CAN'T INSERT MOST ACTIVE USER AT", datetime.datetime.now().strftime('%H:%M %d/%m/%Y'))
+        print(f"[{ datetime.datetime.now().strftime('%H:%M %d/%m/%Y')}] [UPDATE ACTIVE USER] [TASK] [INFO] CAN'T INSERT MOST ACTIVE USER AT")
     except Exception as e:
-        print("[UPDATE ACTIVE USER] [TASK] [ERROR] WITH CODE", e)
+        print(f"[{ datetime.datetime.now().strftime('%H:%M %d/%m/%Y')}] [UPDATE ACTIVE USER] [TASK] [ERROR] WITH CODE", e)
 
 
 @tasks.loop(minutes=1)
@@ -91,15 +93,15 @@ async def update_banner():
 
                 draw.text((305, 315), f"{nickname}", fill="white", font=font_nickname)
             else:
-                draw.text((280, 315), "Неизвестно", fill="white", font=font_large)
+                draw.text((315, 320), "Неизвестно", fill="white", font=font_large)
         else:
-            draw.text((280, 315), "Неизвестно", fill="white", font=font_large)
+            draw.text((315, 320), "Неизвестно", fill="white", font=font_large)
 
         member_count = guild.member_count
         voice_count = len([m for m in guild.members if m.voice])
 
-        draw.text((660, 415), f'{member_count}', fill='white', font=font_large)  # Количество участников
-        draw.text((705, 275), f'{voice_count}', fill='white', font=font_large)  # Количество участников в голосовом чате
+        draw.text((670, 412), f'{member_count}', fill='white', font=font_large)
+        draw.text((705, 275), f'{voice_count}', fill='white', font=font_large)
 
         banner_image.save("main/utils/banner/pics/new_banner.png")
 
@@ -107,6 +109,6 @@ async def update_banner():
             banner = banner_file.read()
 
         await guild.edit(banner=banner)
-        print("[UPDATE GUILD BANNER] [TASK] [INFO] BANNER SUCCESSFULLY UPDATED AT", datetime.datetime.now().strftime('%H:%M %d/%m/%Y'))
+        print(f"[{ datetime.datetime.now().strftime('%H:%M %d/%m/%Y')}] [UPDATE GUILD BANNER] [TASK] [INFO] BANNER SUCCESSFULLY UPDATED AT")
     except Exception as e:
-        print("[UPDATE GUILD BANNER] [TASK] [ERROR] WITH CODE", e)
+        print(f"[{ datetime.datetime.now().strftime('%H:%M %d/%m/%Y')}] [UPDATE GUILD BANNER] [TASK] [ERROR] WITH CODE", e)
