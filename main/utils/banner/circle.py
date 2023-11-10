@@ -4,12 +4,13 @@ from PIL import Image, ImageDraw
 import numpy as np
 from io import BytesIO
 
+
 def image(url: str):
     response = requests.get(url)
 
     if response.status_code == 200:
         img = Image.open(BytesIO(response.content)).convert("RGB")
-        
+
         new_size = (120, 115)
         img = img.resize(new_size)
 
@@ -23,7 +24,7 @@ def image(url: str):
         npAlpha = np.array(alpha)
 
         npImage = np.dstack((npImage, npAlpha))
-        
+
         file_path = 'pfp.png'
 
         if os.path.exists(file_path):

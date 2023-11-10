@@ -13,6 +13,7 @@ with open('config.json', 'r', encoding='utf-8') as f:
 
 openai.api_key = cfg['BOT']['GPTTOKEN']
 
+
 class SomeCommandsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -23,7 +24,6 @@ class SomeCommandsCog(commands.Cog):
         async def ping(self, inter: discord.Interaction):
             bot_ping = round(bot.latency * 1000)
             await inter.response.send_message(f"Пинг бота: **{bot_ping}** ms.", ephemeral=True)
-
 
         @app_commands.command(name="aiimg", description="Сгенерировать картинку")
         @app_commands.describe(size='Размер изображения', prompt="Что ты хочешь сгенерировать ?")
@@ -42,14 +42,16 @@ class SomeCommandsCog(commands.Cog):
                 size=f"{size.value}"
             )
 
-            em = discord.Embed(title="Сгенерированное изображение", description=f">>> {prompt}", timestamp=datetime.datetime.now(), color=discord.Colour.green())
-            em.set_author(name=f"{inter.user.name}", icon_url = f"{inter.user.avatar.url if inter.user.avatar else inter.user.default_avatar}")
+            em = discord.Embed(title="Сгенерированное изображение", description=f">>> {prompt}",
+                               timestamp=datetime.datetime.now(), color=discord.Colour.green())
+            em.set_author(name=f"{inter.user.name}",
+                          icon_url=f"{inter.user.avatar.url if inter.user.avatar else inter.user.default_avatar}")
             em.set_image(url=f"{response['data'][0]['url']}")
             await inter.followup.send(embed=em)
 
         @app_commands.command(name="usermsgclear", description="Убрать сообщения пользователя из дб")
         @app_commands.describe(user="Выберете пользователя", count="Количество удаляемых сообщений")
-        async def clear(inter: discord.Interaction, user: discord.Member, count: int):
+        async def clear(self, inter: discord.Interaction, user: discord.Member, count: int):
             try:
                 pcursor.execute("SELECT userID, messages_count FROM messages_activity WHERE userID = %s", (user.id,))
                 user_data = pcursor.fetchone()
@@ -58,19 +60,25 @@ class SomeCommandsCog(commands.Cog):
                     user_id, current_count = user_data
 
                     if count > current_count:
-                        await inter.response.send_message("Указанное количество сообщений для удаления больше, чем имеющееся количество.", ephemeral=True)
+                        await inter.response.send_message(
+                            "Указанное количество сообщений для удаления больше, чем имеющееся количество.",
+                            ephemeral=True)
                     else:
                         new_count = current_count - count
 
-                        pcursor.execute("UPDATE messages_activity SET messages_count = %s WHERE userID = %s", (new_count, user_id))
+                        pcursor.execute("UPDATE messages_activity SET messages_count = %s WHERE userID = %s",
+                                        (new_count, user_id))
 
-                        await inter.response.send_message(f"У пользователя {user.mention} было удалено {count} сообщений. Теперь у него {new_count} сообщений.", ephemeral=True)
+                        await inter.response.send_message(
+                            f"У пользователя {user.mention} было удалено {count} сообщений. Теперь у него {new_count} сообщений.",
+                            ephemeral=True)
                 else:
                     await inter.response.send_message("Такого пользователя нет", ephemeral=True)
             except Exception as e:
                 print(f"[COMMAND] [ERROR] WITH CODE {e}")
     except Exception as e:
         print(f"[{datetime.datetime.now().strftime('%H:%M:%S, %d/%m')}] [MODER COMMANDS] [ERROR] WITH CODE {e}")
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SomeCommandsCog(bot))
