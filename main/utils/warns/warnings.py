@@ -12,11 +12,7 @@ from data.postgresql import pcursor
 
 
 def is_admin(inter: discord.Interaction):
-    if inter.user.guild_permissions.administrator:
-        return True
-    else:
-        return False
-
+    return inter.user.guild_permissions.administrator 
 
 class WarnModal(Modal, title="Добавить предупреждение"):
     steamid = TextInput(label="Steamid админа:", style=TextStyle.short, placeholder="Формат: STEAM_X:X:XXXXXXXXX",
